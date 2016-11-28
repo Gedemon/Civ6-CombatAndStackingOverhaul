@@ -1,0 +1,47 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Mod id="b42e2fd3-b0eb-46ce-a516-e72e1c635cf3" version="1">
+  <Properties>
+    <Name>LOC_CSO_TITLE</Name>
+    <Stability>Alpha</Stability>
+    <Teaser>LOC_CSO_TEASER</Teaser>
+    <Description>LOC_CSO_DESCRIPTION</Description>
+    <Authors>Gedemon</Authors>
+  </Properties>
+  <Dependencies />
+  <References />
+  <Blocks />  
+  <Settings />	
+	<Components>
+		<UpdateDatabase id="CombatAndStackingOverhaul">
+			<Items>
+				<File>CSO_Rules.sql</File>
+			</Items>
+		</UpdateDatabase>
+	</Components>
+	<UserInterface>		
+		<Properties>
+			<Context>InGame</Context>
+		</Properties>
+		<Items>
+			<File>CSO_InGame.xml</File>
+		</Items>
+	</UserInterface>
+	
+	<LocalizedText>
+		<Text id="LOC_CSO_TITLE">
+			<en_US>Combat and Stacking Overhaul</en_US>
+		</Text>
+		<Text id="LOC_CSO_TEASER">
+			<en_US>Combat and Stacking Overhaul</en_US>
+		</Text>
+		<Text id="LOC_CSO_DESCRIPTION">
+			<en_US>Combat and Stacking Overhaul.</en_US>
+		</Text>
+	</LocalizedText>
+	
+	<Files>
+		<File>CSO_Rules.sql</File>
+		<File>CSO_InGame.xml</File>
+		<File>CSO_InGame.lua</File>
+	</Files>
+</Mod>

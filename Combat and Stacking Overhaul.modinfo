@@ -12,11 +12,17 @@
   <Blocks />  
   <Settings />	
 	<Components>
-		<UpdateDatabase id="CombatAndStackingOverhaul">
+		<UpdateDatabase id="CSO_DB">
 			<Items>
 				<File>CSO_Rules.sql</File>
 			</Items>
 		</UpdateDatabase>
+		
+		<LocalizedText id="CSO_LOC">
+			<Items>
+				<File>CSO_Text.xml</File>
+			</Items>
+		</LocalizedText>
 	</Components>
 	<UserInterface>		
 		<Properties>

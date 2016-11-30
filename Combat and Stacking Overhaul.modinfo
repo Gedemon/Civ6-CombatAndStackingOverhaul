@@ -49,5 +49,6 @@
 		<File>CSO_Rules.sql</File>
 		<File>CSO_InGame.xml</File>
 		<File>CSO_InGame.lua</File>
+		<File>CSO_Text.xml</File>
 	</Files>
 </Mod>

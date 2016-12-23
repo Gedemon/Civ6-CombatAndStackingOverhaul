@@ -18,20 +18,22 @@
 			</Items>
 		</UpdateDatabase>
 		
+		<UserInterface>		
+			<Properties>
+				<Context>InGame</Context>
+			</Properties>
+			<Items>
+				<File>CSO_InGame.xml</File>
+			</Items>
+		</UserInterface>
+	
 		<LocalizedText id="CSO_LOC">
 			<Items>
 				<File>CSO_Text.xml</File>
+				<File>CSO_Text.sql</File>
 			</Items>
 		</LocalizedText>
 	</Components>
-	<UserInterface>		
-		<Properties>
-			<Context>InGame</Context>
-		</Properties>
-		<Items>
-			<File>CSO_InGame.xml</File>
-		</Items>
-	</UserInterface>
 	
 	<LocalizedText>
 		<Text id="LOC_CSO_TITLE">
@@ -50,5 +52,6 @@
 		<File>CSO_InGame.xml</File>
 		<File>CSO_InGame.lua</File>
 		<File>CSO_Text.xml</File>
+		<File>CSO_Text.sql</File>
 	</Files>
 </Mod>

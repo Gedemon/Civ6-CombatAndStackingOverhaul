@@ -1,5 +1,6 @@
 /*
 	Combat and Stacking Overhaul
+	Rules
 	by Gedemon (2016)
 */
  
@@ -9,6 +10,15 @@ INSERT OR REPLACE INTO GlobalParameters (Name, Value) VALUES ('CSO_VERSION', 'Al
 -----------------------------------------------
 -- Units
 -----------------------------------------------
+
+/* # types of units per tile (some checks to prevent more than 1UPT seems harcoded) */
+UPDATE GlobalParameters SET Value = 1 WHERE Name = 'PLOT_UNIT_LIMIT';	-- default = 1
+
+/* More units on map */
+UPDATE Units SET Cost = Cost * 0.75 WHERE Cost > 1 AND (Domain = 'DOMAIN_LAND' or Domain = 'DOMAIN_SEA') AND NOT FormationClass = 'FORMATION_CLASS_CIVILIAN';
+UPDATE Units SET Cost = Cost * 0.85 WHERE Cost > 1 AND (Domain = 'DOMAIN_AIR');
+-- Balance : Combat bonus is less required if AI can put twice more units in an area as it already has a production bonus from difficulty
+DELETE FROM Modifiers WHERE ModifierId ='HIGH_DIFFICULTY_COMBAT_SCALING'; 
 
 /* AT are ranged support */
 UPDATE Units SET Range ='1', PromotionClass ='PROMOTION_CLASS_RANGED' WHERE UnitType = 'UNIT_AT_CREW' OR UnitType = 'UNIT_MODERN_AT';
@@ -31,10 +41,18 @@ UPDATE Units SET FormationClass = 'FORMATION_CLASS_SUPPORT' WHERE PromotionClass
 
 /* Apply new AI */
 /*
--- to do
+-- to do ?
 DELETE FROM UnitAiInfos WHERE UnitType = (SELECT UnitType FROM Units WHERE (RangedCombat > 0 OR Bombard > 0) AND (Domain = 'DOMAIN_LAND'));
-
 */
+UPDATE UnitAiInfos SET AiType ='UNITTYPE_RANGED' WHERE AiType ='UNITTYPE_MELEE' AND (UnitType = 'UNIT_AT_CREW' OR UnitType = 'UNIT_MODERN_AT');
+INSERT INTO UnitAiInfos 
+(	UnitType, 				AiType) VALUES
+(	'UNIT_AMERICAN_P51', 	'UNITTYPE_RANGED'),
+(	'UNIT_BIPLANE', 		'UNITTYPE_RANGED'),
+(	'UNIT_BOMBER', 			'UNITTYPE_RANGED'),
+(	'UNIT_FIGHTER', 		'UNITTYPE_RANGED'),
+(	'UNIT_JET_BOMBER', 		'UNITTYPE_RANGED'),
+(	'UNIT_JET_FIGHTER', 	'UNITTYPE_RANGED');
 
 /* Range = 1 for all Ranged Land/Sea unit */
 UPDATE Units SET Range ='1' WHERE (RangedCombat > 0 OR Bombard > 0) AND (Domain = 'DOMAIN_LAND' OR Domain = 'DOMAIN_SEA');
@@ -50,33 +68,22 @@ UPDATE Units SET Range ='4' WHERE UnitType = 'UNIT_MISSILE_CRUISER' OR UnitType 
 
 /* Balance */
 UPDATE Units SET RangedCombat ='50' WHERE UnitType = 'UNIT_RANGER'; -- default RangedCombat = 60
+UPDATE Units SET CanTrain ='0' WHERE UnitType = 'UNIT_OBSERVATION_BALLOON';
 
+/* Air Combat */
+UPDATE Districts SET AirSlots = 3 WHERE DistrictType = 'DISTRICT_CITY_CENTER';	-- default = 1
+UPDATE Units SET PrereqDistrict = NULL Where PrereqDistrict = "DISTRICT_AERODROME";
 
------------------------------------------------
--- Walls
------------------------------------------------
+UPDATE Units SET BaseSightRange = 3 Where UnitType = "UNIT_BIPLANE";		-- default = 4
+UPDATE Units SET BaseSightRange = 4 Where UnitType = "UNIT_FIGHTER";		-- default = 4
+UPDATE Units SET BaseSightRange = 4 Where UnitType = "UNIT_AMERICAN_P51";	-- default = 4
+UPDATE Units SET BaseSightRange = 4 Where UnitType = "UNIT_BOMBER";			-- default = 4
+UPDATE Units SET BaseSightRange = 5 Where UnitType = "UNIT_JET_FIGHTER";	-- default = 2 ???
+UPDATE Units SET BaseSightRange = 5 Where UnitType = "UNIT_JET_BOMBER";		-- default = 2 ???
 
-/* Thanks to hardcoding, range can't be changed and removing Walls seems to be the only way to disable city ranged attack...  */
---/*
-DELETE FROM Buildings WHERE BuildingType ='BUILDING_WALLS';
-DELETE FROM BuildingPrereqs WHERE Building ='BUILDING_WALLS';
-DELETE FROM ModifierArguments WHERE Value ='BUILDING_WALLS';
---*/
-
-/*
--- Replacement lacks icons and 3D models
-INSERT OR REPLACE INTO Types (Type, Kind) VALUES ('BUILDING_ANCIENT_WALLS','KIND_BUILDING');
-INSERT OR REPLACE INTO Buildings VALUES('BUILDING_ANCIENT_WALLS','LOC_BUILDING_WALLS_NAME','TECH_MASONRY',NULL,80,-1,-1,0,'DISTRICT_CITY_CENTER',NULL,'LOC_BUILDING_WALLS_DESCRIPTION',0,0,50,0,0,NULL,NULL,0,0,NULL,0,1,0,NULL,1,NULL,0,0,0,0,'NO_ERA',0,0,0,0,0,NULL,NULL,0,'ADVISOR_GENERIC');
-DELETE FROM Buildings WHERE BuildingType ='BUILDING_WALLS';
-UPDATE BuildingPrereqs SET PrereqBuilding ='BUILDING_ANCIENT_WALLS' WHERE PrereqBuilding ='BUILDING_WALLS';
-UPDATE StartingBuildings SET Building ='BUILDING_ANCIENT_WALLS' WHERE Building ='BUILDING_WALLS';
-UPDATE ModifierArguments SET Value ='BUILDING_ANCIENT_WALLS' WHERE Value ='BUILDING_WALLS';
---*/
-
-/* Until we can add a new building with icons in a mod, balance with existing buildings */
-UPDATE Buildings SET OuterDefenseHitPoints ='20' WHERE BuildingType ='BUILDING_PALACE';
-UPDATE Buildings SET OuterDefenseHitPoints ='30' WHERE BuildingType ='BUILDING_CASTLE';
-UPDATE Buildings SET OuterDefenseHitPoints ='50' WHERE BuildingType ='BUILDING_STAR_FORT';
+/* Battering Ram and Siege tower are obsolete at Civic Engineering */
+INSERT OR REPLACE INTO UnitUpgrades (Unit, UpgradeUnit) VALUES ('UNIT_BATTERING_RAM','UNIT_BOMBARD');
+INSERT OR REPLACE INTO UnitUpgrades (Unit, UpgradeUnit) VALUES ('UNIT_SIEGE_TOWER','UNIT_BOMBARD');
 
 -----------------------------------------------
 -- Combats
@@ -86,19 +93,43 @@ UPDATE Buildings SET OuterDefenseHitPoints ='50' WHERE BuildingType ='BUILDING_S
 UPDATE GlobalParameters SET Value = 12		WHERE Name = 'COMBAT_BASE_DAMAGE';		-- default = 24
 UPDATE GlobalParameters SET Value = 6		WHERE Name = 'COMBAT_MAX_EXTRA_DAMAGE';	-- default = 12
 
-/* Healing */
-UPDATE GlobalParameters SET Value = 20		WHERE Name = 'COMBAT_HEAL_CITY_GARRISON';		-- default = 20
+/* lower healing */
+UPDATE GlobalParameters SET Value = 15		WHERE Name = 'COMBAT_HEAL_CITY_GARRISON';		-- default = 20
 UPDATE GlobalParameters SET Value = 5		WHERE Name = 'COMBAT_HEAL_CITY_OUTER_DEFENSES';	-- default = 10
-UPDATE GlobalParameters SET Value = 0		WHERE Name = 'COMBAT_HEAL_LAND_ENEMY';			-- default = 5
+UPDATE GlobalParameters SET Value = 3		WHERE Name = 'COMBAT_HEAL_LAND_ENEMY';			-- default = 5
 UPDATE GlobalParameters SET Value = 10		WHERE Name = 'COMBAT_HEAL_LAND_FRIENDLY';		-- default = 15
 UPDATE GlobalParameters SET Value = 5		WHERE Name = 'COMBAT_HEAL_LAND_NEUTRAL';		-- default = 10
 UPDATE GlobalParameters SET Value = 0		WHERE Name = 'COMBAT_HEAL_NAVAL_ENEMY';			-- default = 0
-UPDATE GlobalParameters SET Value = 10		WHERE Name = 'COMBAT_HEAL_NAVAL_FRIENDLY';		-- default = 20
-UPDATE GlobalParameters SET Value = 5		WHERE Name = 'COMBAT_HEAL_NAVAL_NEUTRAL';		-- default = 0
+UPDATE GlobalParameters SET Value = 15		WHERE Name = 'COMBAT_HEAL_NAVAL_FRIENDLY';		-- default = 20
+UPDATE GlobalParameters SET Value = 3		WHERE Name = 'COMBAT_HEAL_NAVAL_NEUTRAL';		-- default = 0
+UPDATE ModifierArguments SET Value = 10 	WHERE ModifierID = 'MEDIC_INCREASE_HEAL_RATE';	-- default = 20
 
 /* Bombard vs Units & Ranged vs Districts */
-UPDATE GlobalParameters SET Value = 10		WHERE Name = 'COMBAT_BOMBARD_VS_UNIT_STRENGTH_MODIFIER';	-- default = 17
-UPDATE GlobalParameters SET Value = 15		WHERE Name = 'COMBAT_RANGED_VS_DISTRICT_STRENGTH_MODIFIER';	-- default = 17
+UPDATE GlobalParameters SET Value = 7		WHERE Name = 'COMBAT_BOMBARD_VS_UNIT_STRENGTH_MODIFIER';	-- default = 17 -- Lower Bombard Combat Strenght vs units by this amount
+UPDATE GlobalParameters SET Value = 14		WHERE Name = 'COMBAT_RANGED_VS_DISTRICT_STRENGTH_MODIFIER';	-- default = 17 -- Lower Ranged Combat Strenght vs districts by this amount
+
+-- % of damage against wall:
+--"COMBAT_DEFENSE_DAMAGE_PERCENT_BOMBARD","100"
+--"COMBAT_DEFENSE_DAMAGE_PERCENT_MELEE","15"
+--"COMBAT_DEFENSE_DAMAGE_PERCENT_RANGED","50"
+
+
+/* Garrison (inner) & Outer Defense */
+
+UPDATE GlobalParameters SET Value = 75		WHERE Name = 'COMBAT_CITY_RANGED_DAMAGE_THRESHOLD';	-- default = 50
+
+UPDATE Districts SET HitPoints = 100 WHERE DistrictType = 'DISTRICT_CITY_CENTER';					-- default = 200
+UPDATE ModifierArguments SET Value = 100 WHERE ModifierID = 'CIVIL_ENGINEERING_URBAN_DEFENSES';		-- default = 200 -- Civil Engineering removed to try to remove city ranged attack
+
+UPDATE Buildings SET OuterDefenseHitPoints = 10 WHERE BuildingType ='BUILDING_PALACE';		-- default = 0
+UPDATE Buildings SET OuterDefenseHitPoints = 20 WHERE BuildingType ='BUILDING_WALLS';		-- default = 50 -- Walls removed to try to remove city ranged attack
+UPDATE Buildings SET OuterDefenseHitPoints = 30 WHERE BuildingType ='BUILDING_CASTLE';		-- default = 50
+UPDATE Buildings SET OuterDefenseHitPoints = 40 WHERE BuildingType ='BUILDING_STAR_FORT';	-- default = 50
+
+UPDATE Buildings SET OuterDefenseStrength = 2 WHERE BuildingType ='BUILDING_WALLS';		-- default = 2 -- Walls removed to try to remove city ranged attack
+UPDATE Buildings SET OuterDefenseStrength = 2 WHERE BuildingType ='BUILDING_CASTLE';	-- default = 2
+UPDATE Buildings SET OuterDefenseStrength = 2 WHERE BuildingType ='BUILDING_STAR_FORT';	-- default = 2
+
 
 -----------------------------------------------
 -- Resources
@@ -106,6 +137,7 @@ UPDATE GlobalParameters SET Value = 15		WHERE Name = 'COMBAT_RANGED_VS_DISTRICT_
 
 /* Remove all resources requirements */
 UPDATE Units SET StrategicResource = NULL;
+UPDATE Projects SET PrereqResource = NULL;
 
 /* Add bonuses for strategic resources */
 
@@ -251,7 +283,7 @@ INSERT INTO TechnologyModifiers
 INSERT INTO Modifiers
 (	ModifierId,												ModifierType,											RunOnce,	Permanent,	SubjectRequirementSetId,			OwnerRequirementSetId				)	VALUES
 
-(	'CHEMISTRY_ALLOWS_NITER_TO_FERTILIZERS',				'MODIFIER_ALL_CITIES_ATTACH_MODIFIER',					'0',		'0',		NULL,								'REQUIREMENT_PLAYER_HAS_NITER'		), -- MODIFIER_ALL_PLAYERS_ATTACH_MODIFIER | MODIFIER_ALL_CITIES_ATTACH_MODIFIER 
+(	'CHEMISTRY_ALLOWS_NITER_TO_FERTILIZERS',				'MODIFIER_PLAYER_CITIES_ATTACH_MODIFIER',				'0',		'0',		NULL,								'REQUIREMENT_PLAYER_HAS_NITER'		), -- MODIFIER_ALL_PLAYERS_ATTACH_MODIFIER | MODIFIER_ALL_CITIES_ATTACH_MODIFIER 
 (	'CHEMISTRY_ALLOWS_NITER_TO_FERTILIZERS_MODIFIER',		'MODIFIER_CITY_PLOT_YIELDS_ADJUST_PLOT_YIELD',			'0',		'0',		'REQUIREMENTS_PLOT_HAS_FARM',		NULL								), -- MODIFIER_PLAYER_ADJUST_PLOT_YIELD | MODIFIER_CITY_PLOT_YIELDS_ADJUST_PLOT_YIELD | MODIFIER_SINGLE_PLOT_ADJUST_PLOT_YIELDS
 
 (	'PRODUCTION_RESOURCE_IRON_BONUS_FOR_SWORDSMAN',			'MODIFIER_PLAYER_UNITS_ADJUST_UNIT_PRODUCTION',			'0',		'0',		NULL,								'REQUIREMENT_PLAYER_HAS_IRON'		),
@@ -611,3 +643,112 @@ UPDATE Projects SET Cost = Cost*2
 UPDATE Projects SET Cost = Cost*3 -- Mars Reactor can get 2x 100% bonus (aluminum and uranium)
 	WHERE 	ProjectType = 'PROJECT_LAUNCH_MARS_REACTOR';
 
+	
+/* 
+	TESTING SECTION
+*/
+/*
+
+
+-----------------------------------------------
+-- City Ranged Attack
+-----------------------------------------------
+
+/* 
+	Thanks to hardcoding, range can't be changed and removing Outer Defense seems to be the only way to disable city ranged attack...
+*/
+/* Remove Walls */
+/*
+DELETE FROM Buildings WHERE BuildingType ='BUILDING_WALLS';
+DELETE FROM BuildingPrereqs WHERE Building ='BUILDING_WALLS' or PrereqBuilding ='BUILDING_WALLS';
+DELETE FROM ModifierArguments WHERE Value ='BUILDING_WALLS';
+--*/
+
+/*
+-- Replacement lacks icons and 3D models
+INSERT OR REPLACE INTO Types (Type, Kind) VALUES ('BUILDING_ANCIENT_WALLS','KIND_BUILDING');
+INSERT OR REPLACE INTO Buildings VALUES('BUILDING_ANCIENT_WALLS','LOC_BUILDING_WALLS_NAME','TECH_MASONRY',NULL,80,-1,-1,0,'DISTRICT_CITY_CENTER',NULL,'LOC_BUILDING_WALLS_DESCRIPTION',0,0,50,0,0,NULL,NULL,0,0,NULL,0,1,0,NULL,1,NULL,0,0,0,0,'NO_ERA',0,0,0,0,0,NULL,NULL,0,'ADVISOR_GENERIC');
+DELETE FROM Buildings WHERE BuildingType ='BUILDING_WALLS';
+UPDATE BuildingPrereqs SET PrereqBuilding ='BUILDING_ANCIENT_WALLS' WHERE PrereqBuilding ='BUILDING_WALLS';
+UPDATE StartingBuildings SET Building ='BUILDING_ANCIENT_WALLS' WHERE Building ='BUILDING_WALLS';
+UPDATE ModifierArguments SET Value ='BUILDING_ANCIENT_WALLS' WHERE Value ='BUILDING_WALLS';
+--*/
+
+/* Remove Civil Engineering */ 
+/*
+DELETE FROM Civics WHERE CivicType = 'CIVIC_CIVIL_ENGINEERING';
+DELETE FROM CivicPrereqs WHERE Civic = 'CIVIC_CIVIL_ENGINEERING' or PrereqCivic = 'CIVIC_CIVIL_ENGINEERING';
+DELETE FROM CivicModifiers WHERE CivicType = 'CIVIC_CIVIL_ENGINEERING';
+DELETE FROM Boosts WHERE CivicType = 'CIVIC_CIVIL_ENGINEERING';
+DELETE FROM AiFavoredItems WHERE Item = 'CIVIC_CIVIL_ENGINEERING';
+
+UPDATE Improvement_ValidTerrains SET PrereqCivic = NULL, PrereqTech = 'TECH_ENGINEERING' WHERE PrereqCivic ='CIVIC_CIVIL_ENGINEERING';
+UPDATE Policies SET PrereqCivic = 'CIVIC_NATIONALISM' WHERE PolicyType= 'POLICY_PUBLIC_WORKS';
+UPDATE Policies SET PrereqCivic = 'CIVIC_URBANIZATION' WHERE PolicyType= 'POLICY_SKYSCRAPERS';
+UPDATE Units SET ObsoleteCivic = NULL WHERE ObsoleteCivic ='CIVIC_CIVIL_ENGINEERING';
+--*/
+
+/* Reduce Ranged Attack Value */
+/*
+INSERT INTO GameModifiers
+(	ModifierId							)	VALUES
+(	'GAME_REDUCE_CITY_RANGED_STRIKE'	);
+
+INSERT INTO Modifiers
+(	ModifierId,							ModifierType,									RunOnce,	Permanent,	SubjectRequirementSetId,	OwnerRequirementSetId	)	VALUES
+(	'GAME_REDUCE_CITY_RANGED_STRIKE',	'MODIFIER_PLAYER_CITIES_ADJUST_RANGED_STRIKE',	'0',		'0',		NULL,						NULL					);
+
+INSERT INTO ModifierArguments
+(	ModifierId,							Name,			Value	)	VALUES
+(	'GAME_REDUCE_CITY_RANGED_STRIKE',	'Amount',		'-20'	);
+
+*/
+
+/*
+UPDATE GlobalParameters SET Value = -1		WHERE Name = 'COMBAT_CITY_RANGED_DAMAGE_THRESHOLD';	-- default = 50
+UPDATE GlobalParameters SET Value = 0		WHERE Name = 'COMBAT_MINIMUM_CITY_STRIKE_STRENGTH';	-- default = 3
+
+UPDATE Districts SET HitPoints = 50		WHERE DistrictType = 'DISTRICT_CITY_CENTER';	-- default = 200
+
+UPDATE Buildings SET OuterDefenseHitPoints ='0';
+--*/
+-----------------------------------------------
+-- AI test
+-----------------------------------------------
+/*
+UPDATE AiOperationTeams SET InitialStrengthAdvantage ='-1', OngoingStrengthAdvantage ='-1' WHERE TeamName LIKE '%City Attack%';
+UPDATE AiOperationDefs SET MinOddsOfSuccess = '0';
+--*/
+-----------------------------------------------
+-- Warmonger test
+-----------------------------------------------
+
+UPDATE Eras SET WarmongerPoints = 0 	WHERE EraType='ERA_ANCIENT'; 		-- Default = 0
+UPDATE Eras SET WarmongerPoints = 0 	WHERE EraType='ERA_CLASSICAL';  	-- Default = 4
+UPDATE Eras SET WarmongerPoints = 1 	WHERE EraType='ERA_MEDIEVAL';  		-- Default = 8
+UPDATE Eras SET WarmongerPoints = 4 	WHERE EraType='ERA_RENAISSANCE';  	-- Default = 12
+UPDATE Eras SET WarmongerPoints = 6 	WHERE EraType='ERA_INDUSTRIAL';  	-- Default = 18
+UPDATE Eras SET WarmongerPoints = 8 	WHERE EraType='ERA_MODERN';  		-- Default = 24
+UPDATE Eras SET WarmongerPoints = 16 	WHERE EraType='ERA_ATOMIC';  		-- Default = 24
+UPDATE Eras SET WarmongerPoints = 16 	WHERE EraType='ERA_INFORMATION';  	-- Default = 24
+	
+
+UPDATE DiplomaticActions SET WarmongerPercent = 50 	WHERE DiplomaticActionType='DIPLOACTION_DECLARE_FORMAL_WAR'; 		-- Default = 100
+UPDATE DiplomaticActions SET WarmongerPercent = 35 	WHERE DiplomaticActionType='DIPLOACTION_JOINT_WAR'; 				-- Default = 100
+UPDATE DiplomaticActions SET WarmongerPercent = 150	WHERE DiplomaticActionType='DIPLOACTION_DECLARE_SURPRISE_WAR'; 		-- Default = 150
+UPDATE DiplomaticActions SET WarmongerPercent = 35 	WHERE DiplomaticActionType='DIPLOACTION_DECLARE_HOLY_WAR';			-- Default = 50
+UPDATE DiplomaticActions SET WarmongerPercent = 0 	WHERE DiplomaticActionType='DIPLOACTION_DECLARE_LIBERATION_WAR';	-- Default = 0
+UPDATE DiplomaticActions SET WarmongerPercent = 0 	WHERE DiplomaticActionType='DIPLOACTION_DECLARE_RECONQUEST_WAR'; 	-- Default = 0
+UPDATE DiplomaticActions SET WarmongerPercent = 0 	WHERE DiplomaticActionType='DIPLOACTION_DECLARE_PROTECTORATE_WAR'; 	-- Default = 0
+UPDATE DiplomaticActions SET WarmongerPercent = 35 	WHERE DiplomaticActionType='DIPLOACTION_DECLARE_COLONIAL_WAR'; 		-- Default = 50
+UPDATE DiplomaticActions SET WarmongerPercent = 50 	WHERE DiplomaticActionType='DIPLOACTION_DECLARE_TERRITORIAL_WAR'; 	-- Default = 75
+
+
+UPDATE GlobalParameters SET Value = 15 		WHERE Name='WARMONGER_CITY_PERCENT_OF_DOW'; 				-- Default = 50
+UPDATE GlobalParameters SET Value = 50 		WHERE Name='WARMONGER_FINAL_MAJOR_CITY_MULTIPLIER'; 		-- Default = 200
+UPDATE GlobalParameters SET Value = 100		WHERE Name='WARMONGER_FINAL_MINOR_CITY_MULTIPLIER'; 		-- Default = 100
+UPDATE GlobalParameters SET Value = 50 		WHERE Name='DIPLOMACY_WARMONGER_POINT_PERCENT_DECAY'; 		-- Default = 50
+UPDATE GlobalParameters SET Value = 32 		WHERE Name='WARMONGER_LIBERATE_POINTS'; 					-- Default = 32
+UPDATE GlobalParameters SET Value = 200 	WHERE Name='WARMONGER_RAZE_PENALTY_PERCENT'; 				-- Default = 200
+--UPDATE GlobalParameters SET Value = -100	WHERE Name='WARMONGER_STOP_OCCUPYING_REFUND_PERCENT';		-- Default = 100
+--*/

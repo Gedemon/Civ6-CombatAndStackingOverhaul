@@ -63,7 +63,7 @@ UPDATE Units SET Range ='2' WHERE UnitType = 'UNIT_BATTLESHIP' OR UnitType = 'UN
 /* Range = 3 for some units */
 UPDATE Units SET Range ='3' WHERE UnitType = 'UNIT_ROCKET_ARTILLERY';
 
-/* Range = 5 for some units */
+/* Range = 4 for some units */
 UPDATE Units SET Range ='4' WHERE UnitType = 'UNIT_MISSILE_CRUISER' OR UnitType = 'UNIT_NUCLEAR_SUBMARINE';
 
 /* Balance */
@@ -81,9 +81,10 @@ UPDATE Units SET BaseSightRange = 4 Where UnitType = "UNIT_BOMBER";			-- default
 UPDATE Units SET BaseSightRange = 5 Where UnitType = "UNIT_JET_FIGHTER";	-- default = 2 ???
 UPDATE Units SET BaseSightRange = 5 Where UnitType = "UNIT_JET_BOMBER";		-- default = 2 ???
 
-/* Battering Ram and Siege tower are obsolete at Civic Engineering */
-INSERT OR REPLACE INTO UnitUpgrades (Unit, UpgradeUnit) VALUES ('UNIT_BATTERING_RAM','UNIT_BOMBARD');
-INSERT OR REPLACE INTO UnitUpgrades (Unit, UpgradeUnit) VALUES ('UNIT_SIEGE_TOWER','UNIT_BOMBARD');
+/* Battering Ram and Siege tower should upgrade */
+INSERT OR REPLACE INTO UnitUpgrades (Unit, UpgradeUnit) VALUES ('UNIT_BATTERING_RAM','UNIT_MILITARY_ENGINEER');
+INSERT OR REPLACE INTO UnitUpgrades (Unit, UpgradeUnit) VALUES ('UNIT_SIEGE_TOWER','UNIT_MILITARY_ENGINEER');
+INSERT OR REPLACE INTO TypeTags (Type, Tag)	VALUES ('UNIT_MILITARY_ENGINEER', 'CLASS_SIEGE_TOWER');
 
 -----------------------------------------------
 -- Combats
@@ -441,11 +442,11 @@ INSERT INTO ModifierArguments
 (	'UPGRADE_RESOURCE_STEEL_BONUS_FOR_MISSILE_CRUISER',		'UnitType',		'UNIT_MISSILE_CRUISER'								),
 (	'UPGRADE_RESOURCE_STEEL_BONUS_FOR_MODERN_ARMOR',		'UnitType',		'UNIT_MODERN_ARMOR'									),
 (	'UPGRADE_RESOURCE_IRON_BONUS_FOR_SWORDSMAN',			'Amount',		'50'												),
-(	'UPGRADE_RESOURCE_IRON_BONUS_FOR_KNIGHT',				'Amount',		'50'												),
+(	'UPGRADE_RESOURCE_IRON_BONUS_FOR_KNIGHT',				'Amount',		'25'												),
 (	'UPGRADE_RESOURCE_HORSES_BONUS_FOR_CAVALRY',			'Amount',		'50'												),
 (	'UPGRADE_RESOURCE_HORSES_BONUS_FOR_HORSEMAN',			'Amount',		'50'												),
 (	'UPGRADE_RESOURCE_HORSES_BONUS_FOR_HEAVY_CHARIOT',		'Amount',		'50'												),
-(	'UPGRADE_RESOURCE_HORSES_BONUS_FOR_KNIGHT',				'Amount',		'50'												),
+(	'UPGRADE_RESOURCE_HORSES_BONUS_FOR_KNIGHT',				'Amount',		'25'												),
 (	'UPGRADE_RESOURCE_ALUMINUM_BONUS_FOR_FIGHTER',			'Amount',		'50'												),
 (	'UPGRADE_RESOURCE_ALUMINUM_BONUS_FOR_BOMBER',			'Amount',		'50'												),
 (	'UPGRADE_RESOURCE_ALUMINUM_BONUS_FOR_JET_FIGHTER',		'Amount',		'50'												),
@@ -480,11 +481,11 @@ INSERT INTO ModifierArguments
 (	'PURCHASE_RESOURCE_STEEL_BONUS_FOR_MISSILE_CRUISER',	'UnitType',		'UNIT_MISSILE_CRUISER'								),
 (	'PURCHASE_RESOURCE_STEEL_BONUS_FOR_MODERN_ARMOR',		'UnitType',		'UNIT_MODERN_ARMOR'									),
 (	'PURCHASE_RESOURCE_IRON_BONUS_FOR_SWORDSMAN',			'Amount',		'50'												),
-(	'PURCHASE_RESOURCE_IRON_BONUS_FOR_KNIGHT',				'Amount',		'50'												),
+(	'PURCHASE_RESOURCE_IRON_BONUS_FOR_KNIGHT',				'Amount',		'25'												),
 (	'PURCHASE_RESOURCE_HORSES_BONUS_FOR_CAVALRY',			'Amount',		'50'												),
 (	'PURCHASE_RESOURCE_HORSES_BONUS_FOR_HORSEMAN',			'Amount',		'50'												),
 (	'PURCHASE_RESOURCE_HORSES_BONUS_FOR_HEAVY_CHARIOT',		'Amount',		'50'												),
-(	'PURCHASE_RESOURCE_HORSES_BONUS_FOR_KNIGHT',			'Amount',		'50'												),
+(	'PURCHASE_RESOURCE_HORSES_BONUS_FOR_KNIGHT',			'Amount',		'25'												),
 (	'PURCHASE_RESOURCE_ALUMINUM_BONUS_FOR_FIGHTER',			'Amount',		'50'												),
 (	'PURCHASE_RESOURCE_ALUMINUM_BONUS_FOR_BOMBER',			'Amount',		'50'												),
 (	'PURCHASE_RESOURCE_ALUMINUM_BONUS_FOR_JET_FIGHTER',		'Amount',		'50'												),

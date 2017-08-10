@@ -5,7 +5,7 @@
 */
  
 /* Version */
-INSERT OR REPLACE INTO GlobalParameters (Name, Value) VALUES ('CSO_VERSION', 'Alpha .1');
+INSERT OR REPLACE INTO GlobalParameters (Name, Value) VALUES ('CSO_VERSION', 'Alpha .2');
 
 -----------------------------------------------
 -- Units
@@ -26,18 +26,22 @@ UPDATE Units SET RangedCombat ='65', Combat ='60' WHERE UnitType = 'UNIT_AT_CREW
 UPDATE Units SET RangedCombat ='75', Combat ='70' WHERE UnitType = 'UNIT_MODERN_AT';	-- default Combat = 80
 
 /* Create new formation classes */
-/*
--- Need DLL access to link FORMATION CLASS to a stacking class.
+--/*
+-- Need DLL access to link FORMATION CLASS to a stacking class ?
 INSERT INTO Types (Type, Kind) VALUES ('FORMATION_CLASS_RANGED', 'KIND_FORMATION_CLASS');
 INSERT INTO UnitFormationClasses (FormationClassType, Name) VALUES ('FORMATION_CLASS_RANGED', 'Ranged');
 
 INSERT INTO Types (Type, Kind) VALUES ('FORMATION_CLASS_RECON', 'KIND_FORMATION_CLASS');
 INSERT INTO UnitFormationClasses (FormationClassType, Name) VALUES ('FORMATION_CLASS_RECON', 'Recon');
-*/
+--*/
 
 /* Apply the new classes (order is important !) */
+/*
 UPDATE Units SET FormationClass = 'FORMATION_CLASS_SUPPORT' WHERE (RangedCombat > 0 OR Bombard > 0) AND (Domain = 'DOMAIN_LAND');
 UPDATE Units SET FormationClass = 'FORMATION_CLASS_SUPPORT' WHERE PromotionClass = 'PROMOTION_CLASS_RECON' AND Domain = 'DOMAIN_LAND';
+--*/
+UPDATE Units SET FormationClass = 'FORMATION_CLASS_RANGED' WHERE (RangedCombat > 0 OR Bombard > 0) AND (Domain = 'DOMAIN_LAND');
+UPDATE Units SET FormationClass = 'FORMATION_CLASS_RECON' WHERE PromotionClass = 'PROMOTION_CLASS_RECON' AND Domain = 'DOMAIN_LAND';
 
 /* Apply new AI */
 /*

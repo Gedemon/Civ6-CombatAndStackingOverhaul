@@ -12,7 +12,10 @@
   <Blocks />  
   <Settings />	
 	<Components>
-		<UpdateDatabase id="CSO_DB">
+		<UpdateDatabase id="CSO_DB">		
+           	<Properties>
+				<LoadOrder>1000</LoadOrder>
+           	</Properties>
 			<Items>
 				<File>CSO_Rules.sql</File>
 			</Items>

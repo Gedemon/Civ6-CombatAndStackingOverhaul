@@ -14,9 +14,28 @@ function MoveToXY(unit, x, y)
 	local tParameters = {};
 	tParameters[UnitOperationTypes.PARAM_X] = x
 	tParameters[UnitOperationTypes.PARAM_Y] = y
-	UnitManager.RequestOperation(unit, UnitOperationTypes.MOVE_TO, tParameters)
+	--UnitManager.RequestOperation(unit, UnitOperationTypes.MOVE_TO, tParameters)
+	UnitManager.MoveUnit( unit, x, y )
 end
 
+function OnPlayerTurnStarted( iPlayer )
+	print ("------------------------------")
+	print ("PlayerTurnStarted")	
+	print ("------------------------------")
+	local player = Players[iPlayer]
+	local playerConfig = PlayerConfigurations[iPlayer]
+	print("Units of " .. tostring(Locale.Lookup(playerConfig:GetCivilizationShortDescription())))
+	local pPlayerUnits = player:GetUnits();
+	for i, pUnit in pPlayerUnits:Members() do
+		print(pUnit:GetName(), "GetMaxMoves :", pUnit:GetMaxMoves(), "GetMovesRemaining :", pUnit:GetMovesRemaining(), "GetMovementMovesRemaining :", pUnit:GetMovementMovesRemaining())
+		MoveToXY(pUnit, pUnit:GetX()+2 , pUnit:GetY())
+	end
+	for i, pUnit in pPlayerUnits:Members() do
+		print(pUnit:GetName(), "GetMaxMoves :", pUnit:GetMaxMoves(), "GetMovesRemaining :", pUnit:GetMovesRemaining(), "GetMovementMovesRemaining :", pUnit:GetMovementMovesRemaining())
+		MoveToXY(pUnit, pUnit:GetX()-2 , pUnit:GetY())
+	end
+end
+GameEvents.PlayerTurnStarted.Add( OnPlayerTurnStarted )
 
 function OnPlayerTurnActivated( iPlayer, bFirstTime )
 	print ("------------------------------")
